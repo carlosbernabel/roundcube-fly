@@ -1,0 +1,5 @@
+.git .github .gitignore README.md
+
+*.log *.tar.gz *.pem *.key
+
+.env .env.* secrets/
