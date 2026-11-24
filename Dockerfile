@@ -1,97 +1,34 @@
-# syntax=docker/dockerfile:1
-
-# ============================================================
-# Etapa 1: compilar PHP 8.2.35 con soporte para Apache
-# ============================================================
-
-FROM registry.access.redhat.com/ubi8/ubi:8.10 AS php-builder
-
-ARG PHP_VERSION=8.2.35
-
-ARG PHP_SHA256=5737b98601fe5ab1b8c5db0c82ed3158acb9283ed3081ffe2faffb9ac81455e6
-
-RUN dnf install -y \
-        gcc \
-        make \
-        autoconf \
-        bison \
-        re2c \
-        tar \
-        xz \
-        curl \
-        pkgconf-pkg-config \
-        httpd-devel \
-        apr-devel \
-        apr-util-devel \
-        libxml2-devel \
-        openssl-devel \
-        curl-devel \
-        libicu-devel \
-        oniguruma-devel \
-        libzip-devel \
-        sqlite-devel \
-        zlib-devel \
-    && dnf clean all \
-    && rm -rf /var/cache/dnf
-
-WORKDIR /usr/src
-
-RUN curl -fsSL --retry 3 \
-        "https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz" \
-        -o php.tar.xz \
-    && echo "${PHP_SHA256}  php.tar.xz" | sha256sum -c - \
-    && mkdir php \
-    && tar -xf php.tar.xz -C php --strip-components=1 \
-    && rm php.tar.xz
-
-WORKDIR /usr/src/php
-
-RUN ./configure \
-        --prefix=/usr/local \
-        --with-config-file-path=/usr/local/lib \
-        --with-apxs2=/usr/bin/apxs \
-        --with-openssl \
-        --with-curl \
-        --with-zlib \
-        --with-zip \
-        --with-iconv \
-        --with-mysqli=mysqlnd \
-        --with-pdo-mysql=mysqlnd \
-        --with-pdo-sqlite \
-        --with-sqlite3 \
-        --enable-mbstring \
-        --enable-intl \
-        --enable-exif \
-        --enable-opcache \
-        --disable-cgi \
-    && make -j"$(nproc)" \
-    && make install \
-    && install -m 0644 php.ini-production /usr/local/lib/php.ini \
-    && php -v \
-    && php -m
-
-
-# ============================================================
-# Etapa 2: imagen final con UBI 8.10 + Apache + PHP + Roundcube
-# ============================================================
-
 FROM registry.access.redhat.com/ubi8/ubi:8.10
 
-ARG PHP_VERSION=8.2.35
 ARG ROUNDCUBE_VERSION=1.6.20
 
 ARG ROUNDCUBE_SHA256=46919c70c85609b57038903c4ecc4e1d7fa4e14c535fe5b14192d778dcd4a1ee
 
 LABEL org.opencontainers.image.title="roundcube-fly"
-LABEL org.opencontainers.image.description="Roundcube 1.6.20 sobre UBI 8.10, Apache y PHP"
+LABEL org.opencontainers.image.description="Roundcube 1.6.20 sobre UBI 8.10, Apache y PHP-FPM"
 LABEL org.opencontainers.image.version="1.6.20"
 LABEL org.opencontainers.image.base.name="registry.access.redhat.com/ubi8/ubi:8.10"
 
-# Instalar Apache y bibliotecas necesarias para ejecutar PHP.
+# --------------------------------------------------
+# Instalar Apache y PHP 8.2 desde Red Hat AppStream
+# --------------------------------------------------
 
-RUN dnf install -y \
+RUN dnf module enable -y php:8.2 \
+    && dnf install -y \
         httpd \
         curl \
+        tar \
+        php \
+        php-cli \
+        php-common \
+        php-fpm \
+        php-mbstring \
+        php-intl \
+        php-xml \
+        php-mysqlnd \
+        php-gd \
+        php-opcache \
+        php-pecl-zip \
         libxml2 \
         openssl-libs \
         libcurl \
@@ -105,36 +42,43 @@ RUN dnf install -y \
     && dnf clean all \
     && rm -rf /var/cache/dnf
 
-# Copiar PHP compilado y su módulo para Apache.
+# --------------------------------------------------
+# Configurar PHP-FPM
+# --------------------------------------------------
 
-COPY --from=php-builder /usr/local/ /usr/local/
-COPY --from=php-builder /usr/lib64/httpd/modules/libphp.so \
-    /usr/lib64/httpd/modules/libphp.so
+RUN sed -ri \
+        's|^listen = .*|listen = 127.0.0.1:9000|' \
+        /etc/php-fpm.d/www.conf \
+    && sed -ri \
+        's|^;?listen.allowed_clients = .*|listen.allowed_clients = 127.0.0.1|' \
+        /etc/php-fpm.d/www.conf
 
-# Configurar PHP.
+# Configuración PHP
+COPY config/php.ini /etc/php.ini
 
-COPY config/php.ini /usr/local/lib/php.ini
+# --------------------------------------------------
+# Configurar Apache + PHP-FPM
+# --------------------------------------------------
 
-# Configurar Apache para utilizar mod_php y MPM prefork.
+RUN printf '%s\n' \
+    'DirectoryIndex index.php index.html' \
+    'ProxyRequests Off' \
+    '<Directory "/var/www/html">' \
+    '    AllowOverride All' \
+    '    Require all granted' \
+    '</Directory>' \
+    '<FilesMatch "\.php$">' \
+    '    SetHandler "proxy:fcgi://127.0.0.1:9000"' \
+    '</FilesMatch>' \
+    > /etc/httpd/conf.d/roundcube.conf
 
-RUN set -eux; \
-    sed -ri \
-        's/^([[:space:]]*)LoadModule mpm_event_module/\1#LoadModule mpm_event_module/' \
-        /etc/httpd/conf.modules.d/00-mpm.conf; \
-    sed -ri \
-        's/^#[[:space:]]*(LoadModule mpm_prefork_module)/\1/' \
-        /etc/httpd/conf.modules.d/00-mpm.conf; \
-    printf '%s\n' \
-        'LoadModule php_module modules/libphp.so' \
-        'AddHandler php-script .php' \
-        'DirectoryIndex index.php index.html' \
-        '<FilesMatch \.php$>' \
-        '    SetHandler application/x-httpd-php' \
-        '</FilesMatch>' \
-        > /etc/httpd/conf.modules.d/10-php.conf; \
-    httpd -t
+# Comprobar módulos de Apache
+RUN httpd -M 2>&1 | grep -q proxy_fcgi_module \
+    && httpd -t
 
-# Descargar Roundcube 1.6.20 LTS y verificar su integridad.
+# --------------------------------------------------
+# Descargar Roundcube
+# --------------------------------------------------
 
 RUN set -eux; \
     curl -fsSL --retry 3 \
@@ -147,11 +91,15 @@ RUN set -eux; \
         -C /var/www/html; \
     rm -f /tmp/roundcube.tar.gz
 
-# Configuración de Roundcube.
+# --------------------------------------------------
+# Configuración de Roundcube
+# --------------------------------------------------
 
 COPY config/config.inc.php /var/www/html/config/config.inc.php
 
-# Directorios de datos y permisos.
+# --------------------------------------------------
+# Directorios de datos y permisos
+# --------------------------------------------------
 
 RUN mkdir -p \
         /var/lib/roundcube/temp \
@@ -161,16 +109,24 @@ RUN mkdir -p \
         /var/lib/roundcube \
         /var/log/roundcube \
     && chmod 0750 /var/lib/roundcube/temp \
-    && chmod 0750 /var/log/roundcube \
-    && php -v \
+    && chmod 0750 /var/log/roundcube
+
+# --------------------------------------------------
+# Verificaciones
+# --------------------------------------------------
+
+RUN php -v \
     && php -m \
-    && httpd -t
+    && php-fpm -t \
+    && httpd -t \
+    && rpm -q php php-fpm
 
-# Puerto HTTP.
-
+# Puerto HTTP
 EXPOSE 80
 
-# Apache permanece en primer plano para que el contenedor
-# funcione correctamente en Kubernetes.
+# Arranque de Apache y PHP-FPM
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
-CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]
+RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
