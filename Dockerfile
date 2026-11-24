@@ -45,6 +45,8 @@ RUN dnf module enable -y php:8.2 \
 # --------------------------------------------------
 # Configurar PHP-FPM
 # --------------------------------------------------
+RUN mkdir -p /run/php-fpm && \
+    chown -R apache:apache /run/php-fpm
 
 RUN sed -ri \
         's|^listen = .*|listen = 127.0.0.1:9000|' \
