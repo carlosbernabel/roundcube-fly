@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eux
 
-ROUNDCUBE_DIR="/var/www/roundcube"
+ROUNDCUBE_DIR="/var/www/"
 PLUGIN_DIR="${ROUNDCUBE_DIR}/plugins"
 
 cd "${ROUNDCUBE_DIR}"

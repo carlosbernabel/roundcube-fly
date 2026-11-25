@@ -126,11 +126,13 @@ RUN php -v \
 # Puerto HTTP
 EXPOSE 80
 
-# Arranque de Apache y PHP-FPM
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-
 # Recompilar roundcube con plugins
 COPY launch.sh /root/launch.sh
+
+RUN chmod 0755 /root/launch.sh
+
+# Arranque de Apache y PHP-FPM
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh
 
