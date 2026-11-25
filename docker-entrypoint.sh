@@ -5,7 +5,7 @@ set -u
 FLAG_FILE="/var/www/.initialized"
 
 if [ ! -f "$FLAG_FILE" ]; then
-    cd /var/www/roundcube
+    cd /var/www/
     # Ejecuta el comando PHP para inicializar la base de datos
     php bin/initdb.sh --dir=SQL --create || true
     # Init db calendar
