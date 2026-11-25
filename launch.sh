@@ -40,23 +40,27 @@ php -r "unlink('composer-setup.php');"
 # ==========================================
 
 cd "/tmp"
-   git clone https://git.kolab.org/diffusion/RPK/roundcubemail-plugins-kolab.git
+git clone https://git.kolab.org/diffusion/RPK/roundcubemail-plugins-kolab.git
 
-cd "/tmp/roundcubemail-plugins-kolab/plugins/"
-# libcalendaring
-if [ ! -d libcalendaring ]; then
-    cp -r libcalendaring "${PLUGIN_DIR}/"
-fi
+cd "${PLUGIN_DIR}"
+cp -pr "/tmp/roundcubemail-plugins-kolab/plugins/libcalendaring" .
+cp -pr "/tmp/roundcubemail-plugins-kolab/plugins/libkolab" .
+cp -pr "/tmp/roundcubemail-plugins-kolab/plugins/calendar" .
 
-# libkolab
-if [ ! -d libkolab ]; then
-    cp -r libkolab "${PLUGIN_DIR}/"
-fi
-
-# calendar
-if [ ! -d calendar ]; then
-    cp -r calendar "${PLUGIN_DIR}/"
-fi
+## libcalendaring
+#if [ ! -d libcalendaring ]; then
+#    cp -r libcalendaring "${PLUGIN_DIR}/"
+#fi
+#
+## libkolab
+#if [ ! -d libkolab ]; then
+#    cp -r libkolab "${PLUGIN_DIR}/"
+#fi
+#
+## calendar
+#if [ ! -d calendar ]; then
+#    cp -r calendar "${PLUGIN_DIR}/"
+#fi
 
 rm -fr /tmp/roundcubemail-plugins-kolab
 
@@ -64,18 +68,21 @@ rm -fr /tmp/roundcubemail-plugins-kolab
 # CONFIGURE CALENDAR PLUGINS
 # ==========================================
 
-cd "${PLUGIN_DIR}/libcalendaring"
-ln -sfn "${ROUNDCUBE_DIR}/program" ./
-
-cd "${PLUGIN_DIR}/libkolab"
-ln -sfn "${ROUNDCUBE_DIR}/program" ./
-
-cd "${PLUGIN_DIR}/calendar"
-ln -sfn "${ROUNDCUBE_DIR}/program" ./
+#cd "${PLUGIN_DIR}/libcalendaring"
+#ln -sfn "${ROUNDCUBE_DIR}/program" ./
+#
+#cd "${PLUGIN_DIR}/libkolab"
+#ln -sfn "${ROUNDCUBE_DIR}/program" ./
+#
+#cd "${PLUGIN_DIR}/calendar"
+#ln -sfn "${ROUNDCUBE_DIR}/program" ./
 
 # ==========================================
 # INSTALL PLUGIN DEPENDENCIES
 # ==========================================
+#
+
+composer config --no-plugins allow-plugins.roundcube/plugin-installer true
 
 cd "${PLUGIN_DIR}/libcalendaring"
 echo y |composer install --no-dev --optimize-autoloader
