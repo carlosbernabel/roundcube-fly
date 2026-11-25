@@ -83,8 +83,10 @@ rm -fr /tmp/roundcubemail-plugins-kolab
 # INSTALL PLUGIN DEPENDENCIES
 # ==========================================
 
-cd "${ROUNDCUBE_DIR}"
+cd "${PLUGIN_DIR}/calendar"
+cp -p config.inc.php.dist config.inc.php
 composer config --no-plugins allow-plugins.roundcube/plugin-installer true
+echo "y" | composer install --no-dev --optimize-autoloader
 
 cd "${PLUGIN_DIR}/libcalendaring"
 echo "y" |composer install --no-dev --optimize-autoloader
@@ -92,9 +94,6 @@ echo "y" |composer install --no-dev --optimize-autoloader
 cd "${PLUGIN_DIR}/libkolab"
 echo "y" | composer install --no-dev --optimize-autoloader
 
-cd "${PLUGIN_DIR}/calendar"
-cp -p config.inc.php.dist config.inc.php
-echo "y" | composer install --no-dev --optimize-autoloader
 
 # ==========================================
 # INSTALL LESS
