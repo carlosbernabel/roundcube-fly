@@ -47,6 +47,8 @@ cp -pr "/tmp/roundcubemail-plugins-kolab/plugins/libcalendaring" .
 cp -pr "/tmp/roundcubemail-plugins-kolab/plugins/libkolab" .
 cp -pr "/tmp/roundcubemail-plugins-kolab/plugins/calendar" .
 
+chown -R apache.apache "${PLUGIN_DIR}"
+
 ## libcalendaring
 #if [ ! -d libcalendaring ]; then
 #    cp -r libcalendaring "${PLUGIN_DIR}/"

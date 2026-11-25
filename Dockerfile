@@ -20,6 +20,7 @@ RUN dnf module enable -y php:8.2 \
         tar \
         php \
         php-cli \
+        php-ldap \
         php-common \
         php-fpm \
         php-mbstring \
