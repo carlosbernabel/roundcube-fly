@@ -43,13 +43,6 @@ jobs:
           echo "Building Roundcube version: $VERSION"
 
       # ======================================
-      # DOCKER BUILDX
-      # ======================================
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # ======================================
       # LOGIN RED HAT REGISTRY
       # ======================================
 
@@ -63,6 +56,13 @@ jobs:
       - name: Test Red Hat Registry
         run: |
           docker pull registry.redhat.io/ubi9/ubi:latest
+
+      # ======================================
+      # DOCKER BUILDX
+      # ======================================
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       # ======================================
       # LOGIN DOCKER HUB
