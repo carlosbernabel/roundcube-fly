@@ -39,22 +39,26 @@ php -r "unlink('composer-setup.php');"
 # DOWNLOAD ROUNDCUBE CALENDAR COMPONENTS
 # ==========================================
 
-cd "${PLUGIN_DIR}"
+cd "/tmp"
+   git clone https://git.kolab.org/diffusion/RPK/roundcubemail-plugins-kolab.git
 
+cd "/tmp/roundcubemail-plugins-kolab/plugins/"
 # libcalendaring
 if [ ! -d libcalendaring ]; then
-    git clone https://github.com/roundcube/libcalendaring.git
+    cp -r libcalendaring "${PLUGIN_DIR}/"
 fi
 
 # libkolab
 if [ ! -d libkolab ]; then
-    git clone https://github.com/roundcube/libkolab.git
+    cp -r libkolab "${PLUGIN_DIR}/"
 fi
 
 # calendar
 if [ ! -d calendar ]; then
-    git clone https://github.com/roundcube/calendar.git
+    cp -r calendar "${PLUGIN_DIR}/"
 fi
+
+rm -fr /tmp/roundcubemail-plugins-kolab
 
 # ==========================================
 # CONFIGURE CALENDAR PLUGINS
