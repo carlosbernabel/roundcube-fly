@@ -126,9 +126,9 @@ RUN php -v \
     && rpm -q php php-fpm
 
 # Copia los plugins a calendar
-COPY plugins/libcalendaring /var/www/html/plugins/
-COPY plugins/libkolab /var/www/html/plugins/
-COPY plugins/calendar /var/www/html/plugins/
+COPY plugins/libcalendaring /var/www/html/plugins/libcalendarins
+COPY plugins/libkolab /var/www/html/plugins/libkolab
+COPY plugins/calendar /var/www/html/plugins/calendar
 
 # Recompilar roundcube con plugins
 COPY launch.sh /root/launch.sh
