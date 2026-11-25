@@ -8,7 +8,7 @@ steps:
     run: |
       VERSION=$(tr -d '\r\n' < VERSION)
 
-      if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-[0-9]+$ ]]; then
+      if [[ ! "$VERSION" =~ ^v[0-9]+$ ]]; then
         echo "Invalid image version: $VERSION"
         exit 1
       fi
