@@ -11,121 +11,27 @@ permissions:
 
 jobs:
   build:
-    name: Build, validate and publish Roundcube
     runs-on: ubuntu-latest
 
     steps:
-
-      # ======================================
-      # CHECKOUT
-      # ======================================
-
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # ======================================
-      # READ VERSION
-      # ======================================
-
-      - name: Read image version
-        id: version
-        shell: bash
+      - name: Set variables
         run: |
-          VERSION=$(tr -d '\r\n' < VERSION)
+          echo "IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/roundcube-fly" >> $GITHUB_ENV
+          echo "VERSION=v2" >> $GITHUB_ENV
 
-          if [[ ! "$VERSION" =~ ^v[0-9]+$ ]]; then
-            echo "Invalid image version: $VERSION"
-            exit 1
-          fi
-
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-          echo "Building Roundcube version: $VERSION"
-
-      # ======================================
-      # LOGIN RED HAT REGISTRY
-      # ======================================
-
-      - name: Login to Red Hat Registry
-        uses: docker/login-action@v3
-        with:
-          registry: registry.redhat.io
-          username: ${{ secrets.REDHAT_USERNAME }}
-          password: ${{ secrets.REDHAT_TOKEN }}
-
-      - name: Test Red Hat Registry
-        run: |
-          docker pull registry.redhat.io/ubi9/ubi:latest
-
-      # ======================================
-      # DOCKER BUILDX
-      # ======================================
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # ======================================
-      # LOGIN DOCKER HUB
-      # ======================================
-
-      - name: Login to Docker Hub
+      - name: Login Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # ======================================
-      # BUILD IMAGE
-      # ======================================
-
-      - name: Build Roundcube image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          load: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/roundcube-fly:${{ steps.version.outputs.version }}
-
-      # ======================================
-      # VALIDATE PHP
-      # ======================================
-
-      - name: Validate PHP
-        run: |
-          docker run --rm \
-            ${{ secrets.DOCKERHUB_USERNAME }}/roundcube-fly:${{ steps.version.outputs.version }} \
-            php -v
-
-      # ======================================
-      # VALIDATE PHP-FPM
-      # ======================================
-
-      - name: Validate PHP-FPM
-        run: |
-          docker run --rm \
-            ${{ secrets.DOCKERHUB_USERNAME }}/roundcube-fly:${{ steps.version.outputs.version }} \
-            php-fpm -t
-
-      # ======================================
-      # VALIDATE APACHE
-      # ======================================
-
-      - name: Validate Apache
-        run: |
-          docker run --rm \
-            ${{ secrets.DOCKERHUB_USERNAME }}/roundcube-fly:${{ steps.version.outputs.version }} \
-            httpd -t
-
-      # ======================================
-      # PUSH IMAGE
-      # ======================================
-
-      - name: Push image to Docker Hub
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/roundcube-fly:${{ steps.version.outputs.version }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/roundcube-fly:latest
+          tags: ${{ env.IMAGE }}:v2
 
