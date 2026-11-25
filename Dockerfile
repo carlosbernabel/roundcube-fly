@@ -38,6 +38,7 @@ RUN dnf module enable -y php:8.2 \
         sqlite-libs \
         zlib \
         apr \
+        git \
         apr-util \
     && dnf clean all \
     && rm -rf /var/cache/dnf
