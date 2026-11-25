@@ -2,10 +2,10 @@
 
 set -u
 
-FLAG_FILE="/var/www/.initialized"
+FLAG_FILE="/var/www/html/.initialized"
 
 if [ ! -f "$FLAG_FILE" ]; then
-    cd /var/www/
+    cd /var/www/html
     # Ejecuta el comando PHP para inicializar la base de datos
     php bin/initdb.sh --dir=SQL --create || true
     # Init db calendar
