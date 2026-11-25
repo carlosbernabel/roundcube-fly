@@ -13,8 +13,9 @@ if [ ! -f "$FLAG_FILE" ]; then
 #    mkdir -p "$(dirname "$FLAG_FILE")"
     touch "$FLAG_FILE"
 
-    bash /root/launch.sh
 fi
+
+/root/launch.sh
 
 
 # Arrancar PHP-FPM
