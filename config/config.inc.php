@@ -1,71 +1,99 @@
 <?php
 
+/*
+ +-----------------------------------------------------------------------+
+ | Local configuration for the Roundcube Webmail installation.           |
+ |                                                                       |
+ | This is a sample configuration file only containing the minimum       |
+ | setup required for a functional installation. Copy more options       |
+ | from defaults.inc.php to this file to override the defaults.          |
+ |                                                                       |
+ | This file is part of the Roundcube Webmail client                     |
+ | Copyright (C) The Roundcube Dev Team                                  |
+ |                                                                       |
+ | Licensed under the GNU General Public License version 3 or            |
+ | any later version with exceptions for skins & plugins.                |
+ | See the README file for a full license statement.                     |
+ +-----------------------------------------------------------------------+
+*/
+
 $config = [];
 
-/*
- * Nombre de la aplicación.
- */
-$config['product_name'] = 'Roundcube Fly';
+// Database connection string (DSN) for read+write operations
+// Format (compatible with PEAR MDB2): db_provider://user:password@host/database
+// Currently supported db_providers: mysql, pgsql, sqlite, mssql, sqlsrv, oracle
+// For examples see http://pear.php.net/manual/en/package.database.mdb2.intro-dsn.php
+// NOTE: for SQLite use absolute path (Linux): 'sqlite:////full/path/to/sqlite.db?mode=0646'
+//       or (Windows): 'sqlite:///C:/full/path/to/sqlite.db'
+$config['db_dsnw'] = 'mysql://admin:qwerty@db/roundcubemail';
 
-/*
- * Base de datos.
- *
- * Ejemplo de DSN para MySQL:
- * mysql://usuario:password@servidor:3306/roundcube
- */
-$config['db_dsnw'] = getenv('ROUNDCUBEMAIL_DB_DSNW') ?: '';
+// IMAP host chosen to perform the log-in.
+// See defaults.inc.php for the option description.
+$config['imap_host'] = 'imap:143';
 
-/*
- * Servidor IMAP.
- *
- * Ejemplo:
- * ssl://imap.example.com
- */
-$config['default_host'] = getenv('ROUNDCUBEMAIL_DEFAULT_HOST') ?: '';
+// SMTP server host (for sending mails).
+// See defaults.inc.php for the option description.
+$config['smtp_host'] = 'localhost:587';
 
-/*
- * Servidor SMTP.
- *
- * Ejemplo:
- * tls://smtp.example.com
- */
-$config['smtp_server'] = getenv('ROUNDCUBEMAIL_SMTP_SERVER') ?: '';
-
-$config['smtp_port'] = (int) (
-    getenv('ROUNDCUBEMAIL_SMTP_PORT') ?: 587
-);
-
-/*
- * Utiliza las credenciales del usuario autenticado
- * para enviar correo mediante SMTP.
- */
+// SMTP username (if required) if you use %u as the username Roundcube
+// will use the current username for login
 $config['smtp_user'] = '%u';
+
+// SMTP password (if required) if you use %p as the password Roundcube
+// will use the current user's password for login
 $config['smtp_pass'] = '%p';
 
-/*
- * Clave de cifrado de Roundcube.
- *
- * Configurar mediante una variable de entorno secreta.
- */
-$config['des_key'] = getenv('ROUNDCUBEMAIL_DES_KEY') ?: '';
+// provide an URL where a user can get support for this Roundcube installation
+// PLEASE DO NOT LINK TO THE ROUNDCUBE.NET WEBSITE HERE!
+$config['support_url'] = '';
 
-/*
- * Directorios de datos fuera del directorio público.
- */
-$config['temp_dir'] = '/var/lib/roundcube/temp';
-$config['log_dir'] = '/var/log/roundcube';
+// Name your service. This is displayed on the login screen and in the window title
+$config['product_name'] = 'Roundcube Webmail';
 
-/*
- * Configuración de registros.
- */
-$config['log_driver'] = 'file';
+// This key is used to encrypt the users imap password which is stored
+// in the session record. For the default cipher method it must be
+// exactly 24 characters long.
+// YOUR KEY MUST BE DIFFERENT THAN THE SAMPLE VALUE FOR SECURITY REASONS
+$config['des_key'] = 'rcmail-!24ByteDESkey*Str';
 
-/*
- * Configuración de interfaz.
- */
+// List of active plugins (in plugins/ directory)
+$config['plugins'] = [
+    'archive',
+    'zipdownload',
+    'managesieve',
+    'calendar',
+    'libcalendaring',
+    'libkolab',
+];
+
+// skin name: folder from skins/
 $config['skin'] = 'elastic';
 
-/*
- * Desactivar el instalador web.
- */
-$config['enable_installer'] = false;
+$config['managesieve_host'] = 'imap';
+$config['managesieve_port'] = 4190;
+$config['managesieve_user'] = '%u';
+$config['managesieve_password'] = '%p';
+
+// Servidor ManageSieve
+# $config['managesieve_host'] = '127.0.0.1'; // Cambia a tu servidor si no está local
+# $config['managesieve_port'] = 4190;        // Puerto estándar de ManageSieve
+# $config['managesieve_secure'] = '';        // Vacío = sin TLS/SSL
+
+// Autenticación
+# $config['managesieve_auth_type'] = null;   // Usa mismo usuario/contraseña del login de Roundcube
+
+// Opciones adicionales
+# $config['managesieve_autoresp'] = true;   // Permite autoresponders
+$config['managesieve_namespace'] = 'filtros'; // Si tu servidor usa un namespace específico
+
+// Mensajes de depuración (opcional, útil para probar)
+$config['managesieve_debug'] = true;    // Pon true si quieres ver errores
+
+$config['default_folders'] = array(
+    'inbox'   => array('name' => 'INBOX',   'type' => 'inbox'),
+    'sent'    => array('name' => 'Sent',    'type' => 'sent'),
+    'drafts'  => array('name' => 'Drafts',  'type' => 'drafts'),
+    'trash'   => array('name' => 'Trash',   'type' => 'trash'),
+    'junk'    => array('name' => 'Junk',    'type' => 'junk')
+);
+
