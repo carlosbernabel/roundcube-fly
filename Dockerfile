@@ -125,8 +125,10 @@ RUN php -v \
     && httpd -t \
     && rpm -q php php-fpm
 
-# Puerto HTTP
-EXPOSE 80
+# Copia los plugins a calendar
+COPY plugins/libcalendaring /var/www/html/plugins/
+COPY plugins/libkolab /var/www/html/plugins/
+COPY plugins/calendar /var/www/html/plugins/
 
 # Recompilar roundcube con plugins
 COPY launch.sh /root/launch.sh
@@ -137,5 +139,8 @@ RUN chmod 0755 /root/launch.sh
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
 RUN chmod 0755 /usr/local/bin/docker-entrypoint.sh
+
+# Puerto HTTP
+EXPOSE 80
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
