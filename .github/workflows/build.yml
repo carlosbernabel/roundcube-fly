@@ -60,6 +60,10 @@ jobs:
           username: ${{ secrets.REDHAT_USERNAME }}
           password: ${{ secrets.REDHAT_TOKEN }}
 
+      - name: Test Red Hat Registry
+        run: |
+          docker pull registry.redhat.io/ubi9/ubi:latest
+
       # ======================================
       # LOGIN DOCKER HUB
       # ======================================
